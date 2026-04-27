@@ -182,31 +182,3 @@ export default function Dashboard() {
   )
 }
 
-"use client"
-import { useState } from 'react'
-
-// Put this inside your main function
-const [authorized, setAuthorized] = useState(false);
-const [pin, setPin] = useState('');
-
-if (!authorized) {
-  return (
-    <div className="flex h-screen items-center justify-center bg-black text-green-500 font-mono">
-      <div className="border border-green-500 p-8 rounded-lg shadow-lg shadow-green-500/20 text-center">
-        <h2 className="text-xl mb-4">SYSTEM ENCRYPTION ACTIVE</h2>
-        <p className="mb-6 text-sm">Enter Authorization Key to Access PRO Nodes</p>
-        <input 
-          type="password" 
-          className="bg-gray-900 border border-green-800 p-2 rounded mb-4 w-full outline-none focus:border-green-400"
-          onChange={(e) => setPin(e.target.value)}
-        />
-        <button 
-          onClick={() => pin === '9999' ? setAuthorized(true) : alert('ACCESS DENIED')}
-          className="bg-green-600 text-black px-6 py-2 rounded font-bold hover:bg-green-400 w-full"
-        >
-          AUTHORIZE
-        </button>
-      </div>
-    </div>
-  )
-}
