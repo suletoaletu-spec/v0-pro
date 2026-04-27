@@ -7,7 +7,8 @@ import { EnhancedMetrics } from "@/components/dashboard/enhanced-metrics"
 import { AgentFeed } from "@/components/dashboard/agent-feed"
 import { ShortageAlerts } from "@/components/dashboard/shortage-alerts"
 import { DecisionAuthorization } from "@/components/dashboard/decision-authorization"
-import { Globe2, AlertTriangle, Shield, Activity } from "lucide-react"
+import { WaterReserveTransferDemo } from "@/components/dashboard/expandable-transfer-card"
+import { Globe2, AlertTriangle, Shield, Activity, Droplets } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 // Dynamic import for Three.js globe (client-side only)
@@ -28,7 +29,7 @@ const ThreeGlobe = dynamic(
   }
 )
 
-type TabType = "globe" | "alerts" | "authorization"
+type TabType = "globe" | "alerts" | "authorization" | "water"
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<TabType>("globe")
@@ -36,6 +37,7 @@ export default function Dashboard() {
   const tabs = [
     { id: "globe" as const, label: "Global View", icon: Globe2 },
     { id: "alerts" as const, label: "Shortage Alerts", icon: AlertTriangle },
+    { id: "water" as const, label: "Water Transfers", icon: Droplets },
     { id: "authorization" as const, label: "Authorization", icon: Shield },
   ]
 
@@ -116,6 +118,12 @@ export default function Dashboard() {
             {activeTab === "alerts" && (
               <div className="h-[600px] rounded-xl border border-accent/20 bg-card/50 backdrop-blur-sm p-6 overflow-hidden">
                 <ShortageAlerts />
+              </div>
+            )}
+
+            {activeTab === "water" && (
+              <div className="h-[600px] rounded-xl border border-primary/20 bg-card/50 backdrop-blur-sm p-6 overflow-y-auto">
+                <WaterReserveTransferDemo />
               </div>
             )}
 

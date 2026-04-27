@@ -200,6 +200,37 @@ services:
       - pro-network
     restart: unless-stopped
 
+  # HITL Middleware - Human-in-the-Loop authorization
+  hitl-middleware:
+    build:
+      context: ./services/hitl-middleware
+      dockerfile: Dockerfile
+    container_name: pro-hitl-middleware
+    environment:
+      - PORT=8010
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-pro_admin}:${POSTGRES_PASSWORD:-secure_password_change_me}@postgres:5432/${POSTGRES_DB:-pro_platform}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis_secure_password}@redis:6379/10
+      - PUSHOVER_USER_KEY=${PUSHOVER_USER_KEY}
+      - PUSHOVER_API_TOKEN=${PUSHOVER_API_TOKEN}
+      - FIREBASE_SERVER_KEY=${FIREBASE_SERVER_KEY}
+      - FIREBASE_DEVICE_TOKEN=${FIREBASE_DEVICE_TOKEN}
+      - DIGITAL_SIGNATURE_SECRET=${DIGITAL_SIGNATURE_SECRET:-pro-secret-key}
+      - AUTHORIZATION_TIMEOUT_HOURS=${AUTHORIZATION_TIMEOUT_HOURS:-4}
+      - BACKUP_CONTACTS_EMAIL=${BACKUP_CONTACTS_EMAIL:-backup@pro-platform.org}
+      - SERVICE_NAME=hitl-middleware
+    ports:
+      - "8010:8010"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      agent-service:
+        condition: service_started
+    networks:
+      - pro-network
+    restart: unless-stopped
+
   # ============================================================================
   # MONITORING & OBSERVABILITY
   # ============================================================================
