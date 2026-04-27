@@ -1,0 +1,17 @@
+{
+  "name": "PRO Global Dashboard",
+  "short_name": "PRO",
+  "description": "Planetary Resource Orchestration System",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2099/2099165.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
