@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Activity, Wifi, Clock } from "lucide-react"
+import { SecurityStatus } from "./security-status"
 
 export function Header() {
   const [time, setTime] = useState<string>("")
