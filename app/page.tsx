@@ -40,7 +40,28 @@ export default function Dashboard() {
     { id: "water" as const, label: "Water Transfers", icon: Droplets },
     { id: "authorization" as const, label: "Authorization", icon: Shield },
   ]
-
+  if (!authorized) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-black text-green-500 font-mono p-4">
+        <div className="border border-green-500 p-8 rounded-lg shadow-2xl shadow-green-500/20 text-center max-w-md w-full">
+          <h2 className="text-2xl font-bold mb-2 tracking-tighter">RESTRICTED ACCESS</h2>
+          <p className="mb-6 text-[10px] uppercase opacity-60">Planetary Resource Orchestration v1.0</p>
+          <input 
+            type="password" 
+            placeholder="ENTER AUTH KEY"
+            className="bg-black border border-green-900 p-3 rounded mb-4 w-full text-center outline-none focus:border-green-400 text-green-400"
+            onChange={(e) => setPin(e.target.value)}
+          />
+          <button 
+            onClick={() => pin === '1991' ? setAuthorized(true) : alert('INVALID KEY')}
+            className="bg-green-600 text-black px-6 py-3 rounded font-black hover:bg-green-400 w-full transition-all"
+          >
+            AUTHORIZE SYSTEM
+          </button>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -157,6 +178,35 @@ export default function Dashboard() {
           </div>
         </footer>
       </main>
+    </div>
+  )
+}
+
+"use client"
+import { useState } from 'react'
+
+// Put this inside your main function
+const [authorized, setAuthorized] = useState(false);
+const [pin, setPin] = useState('');
+
+if (!authorized) {
+  return (
+    <div className="flex h-screen items-center justify-center bg-black text-green-500 font-mono">
+      <div className="border border-green-500 p-8 rounded-lg shadow-lg shadow-green-500/20 text-center">
+        <h2 className="text-xl mb-4">SYSTEM ENCRYPTION ACTIVE</h2>
+        <p className="mb-6 text-sm">Enter Authorization Key to Access PRO Nodes</p>
+        <input 
+          type="password" 
+          className="bg-gray-900 border border-green-800 p-2 rounded mb-4 w-full outline-none focus:border-green-400"
+          onChange={(e) => setPin(e.target.value)}
+        />
+        <button 
+          onClick={() => pin === '9999' ? setAuthorized(true) : alert('ACCESS DENIED')}
+          className="bg-green-600 text-black px-6 py-2 rounded font-bold hover:bg-green-400 w-full"
+        >
+          AUTHORIZE
+        </button>
+      </div>
     </div>
   )
 }
