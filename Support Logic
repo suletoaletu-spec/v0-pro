@@ -19,3 +19,23 @@ const handleManualSupport = (lat: number, lng: number) => {
   // 3. Optional: Trigger a "Success" toast notification
   // toast.success("Humanitarian Override: Resources Released");
 };
+import emailjs from '@emailjs/browser';
+
+export const dispatchGlobalSupport = async (lat: number, lng: number) => {
+  try {
+    await emailjs.send(
+      'service_vu9cngf',   // Your Service ID
+      'template_eg61rrv',  // Your Template ID
+      {
+        location: `${lat.toFixed(4)}, ${lng.toFixed(4)}`,
+        subject: "PLANETARY SYSTEM ALERT",
+        message: "PROTOCOL: FREE SUPPORT. Aid dispatch initialized from PRO Dashboard."
+      },
+      'vt4gWVLV_Aa9rP6fE'   // Your Public Key
+    );
+    return true;
+  } catch (error) {
+    console.error("Support Dispatch Failed:", error);
+    return false;
+  }
+};
