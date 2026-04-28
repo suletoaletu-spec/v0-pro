@@ -138,3 +138,10 @@ function AlertCard({ alert, isNew }: { alert: Alert; isNew?: boolean }) {
 }
 
 // ... (Keep the main ShortageAlerts wrapper code)
+
+<div className="flex-1 overflow-y-auto space-y-3 pr-1 relative z-30"> 
+  {/* The 'relative z-30' ensures the cards are on top and clickable */}
+  {filteredAlerts.map((alert, index) => (
+    <AlertCard key={alert.id} alert={alert} isNew={index === 0} />
+  ))}
+</div>
