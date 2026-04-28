@@ -96,4 +96,8 @@ export function MetricsCards() {
       />
     </div>
   )
-}
+}<div className="text-3xl font-bold text-cyan-400">
+  <AnimatedNumber value={12.4} suffix="M" /> <span className="text-sm font-normal text-white/50">people</span>
+</div>
+
+
