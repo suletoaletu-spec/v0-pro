@@ -194,3 +194,24 @@ export function Globe() {
     </div>
   )
 }
+{/* OVERLAY HUD */}
+<div className="absolute top-4 right-4 z-20 flex flex-col gap-2">
+  <div className="bg-primary/10 border border-primary/40 backdrop-blur-md p-3 rounded-xl animate-pulse">
+    <div className="flex items-center gap-2 text-[10px] font-black text-primary uppercase italic">
+      <Shield className="w-3 h-3" /> Manual Override: Active
+    </div>
+    <p className="text-[9px] text-white/70 font-mono mt-1">CLICK GLOBE TO RELEASE RESOURCES</p>
+  </div>
+
+  {/* Recent Manual Missions List */}
+  {activeMissions.length > 0 && (
+    <div className="bg-black/80 border border-white/10 p-3 rounded-xl max-h-[150px] overflow-y-auto">
+      <p className="text-[8px] text-muted-foreground uppercase mb-2">Override Logs</p>
+      {activeMissions.map(m => (
+        <div key={m.id} className="text-[9px] font-mono text-green-400 border-l border-green-500 pl-2 mb-2">
+          {m.timestamp}: AID DEPLOYED [{m.lat.toFixed(2)}, {m.lng.toFixed(2)}]
+        </div>
+      ))}
+    </div>
+  )}
+</div>
