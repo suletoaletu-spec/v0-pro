@@ -135,3 +135,20 @@ export function Globe() {
     </div>
   )
 }
+// Inside your Globe component...
+const [lastScan, setLastScan] = useState<any>(null);
+
+const handleGlobeClick = async (lat: number, lng: number) => {
+  // Add a log to your feed
+  setLogs(prev => [`SCANNING COORDS: ${lat.toFixed(2)}, ${lng.toFixed(2)}`, ...prev]);
+  
+  const result = await dispatchPlanetarySupport(lat, lng);
+  
+  if (result.success) {
+    setLastScan({ lat, lng, temp: result.temp });
+    setLogs(prev => [`SUCCESS: DISPATCH SENT (${result.temp}°C)`, ...prev]);
+  }
+};
+
+// ... in your return, make sure the Globe canvas or div has:
+// onClick={() => handleGlobeClick(Math.random()*180-90, Math.random()*360-180)}
