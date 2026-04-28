@@ -152,3 +152,20 @@ const handleGlobeClick = async (lat: number, lng: number) => {
 
 // ... in your return, make sure the Globe canvas or div has:
 // onClick={() => handleGlobeClick(Math.random()*180-90, Math.random()*360-180)}
+
+
+const handleGlobeAction = async (lat: number, lng: number) => {
+  // Add to your visual log feed
+  setLogs(prev => [`SCANNING: [${lat.toFixed(2)}, ${lng.toFixed(2)}]`, ...prev]);
+
+  // Call the new intelligence function
+  const result = await dispatchGlobalIntelligence(lat, lng);
+
+  if (result.success) {
+    setLogs(prev => [
+      `REPORT: ${result.temp}°C | WIND: ${result.wind}km/h`,
+      `SUCCESS: ALERT SENT TO COMMAND`,
+      ...prev
+    ]);
+  }
+};
