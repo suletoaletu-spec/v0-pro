@@ -215,3 +215,19 @@ export function Globe() {
     </div>
   )}
 </div>
+const handleManualSupport = async (lat: number, lng: number) => {
+  // 1. Create the UI log
+  const newMission = { id: Date.now(), lat, lng, timestamp: new Date().toLocaleTimeString() };
+  setActiveMissions(prev => [newMission, ...prev]);
+
+  // 2. AUTOMATIC REAL-WORLD DISPATCH
+  // This sends a real alert to your partner email/phone
+  await dispatchFreeSupport({ lat, lng });
+
+  // 3. UI Feedback
+  toast.success("HUMANITARIAN PARTNERS NOTIFIED", {
+    description: `Support protocol active for coord: ${lat.toFixed(2)}, ${lng.toFixed(2)}`,
+    style: { background: '#000', border: '1px solid #00ff41', color: '#00ff41' }
+  });
+};
+
