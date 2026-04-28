@@ -134,3 +134,10 @@ export function AgentFeed() {
     </div>
   )
 }
+const processProtocol = (report: any) => {
+  if (report.title.includes("Urgent") || report.title.includes("Emergency")) {
+    return { status: "CRITICAL", action: "DEPLOYING AGENT DELTA-9" };
+  }
+  return { status: "MONITORING", action: "BALANCING SURPLUS" };
+};
+
