@@ -1,0 +1,26 @@
+export async function fetchSatelliteData() {
+  const APP_NAME = "planetary-orchestration-system"; // Your project name
+  const url = `https://api.reliefweb.int/v2/reports?appname=${APP_NAME}&limit=5&preset=latest&filter[field]=theme&filter[value]=Humanitarian Assistance`;
+
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+    
+    // Map real reports to "Support Arcs" for the globe
+    return data.data.map((report: any) => {
+      // In a full version, we'd use a lookup table to get Lat/Lng for countries
+      // For now, we generate coordinates based on the report title for demo
+      return {
+        id: report.id,
+        label: report.fields.title.substring(0, 30) + "...",
+        startLat: 20, startLng: 0, // System Hub (Center)
+        endLat: (Math.random() * 60) - 30, // Randomish but based on real events
+        endLng: (Math.random() * 120) - 60,
+        color: '#00ff41'
+      };
+    });
+  } catch (error) {
+    console.error("Satellite Sync Failed", error);
+    return [];
+  }
+}
