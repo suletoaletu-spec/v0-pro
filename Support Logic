@@ -42,6 +42,23 @@ export const dispatchGlobalIntelligence = async (lat: number, lng: number) => {
     return { success: true, temp, wind, humidity };
   } catch (error) {
     console.error("Transmission Error:", error);
-    return { success: false };
-  }
+    return { success: const [aiReport, setAiReport] = useState({
+  region: "Global Monitoring",
+  moisture: "Analyzing...",
+  prediction: "Standby for satellite sync.",
+  impact: "0"
+});
+
+const updateAIReasoning = (lat: number, lng: number, temp: number, humidity: number) => {
+  // This simulates the "AI" calculating based on real data
+  const moistureLevel = Math.max(5, (humidity * 0.4).toFixed(1)); // Logic based on real humidity
+  const risk = temp > 30 ? "High Thermal Stress" : "Stable";
+  const residents = Math.floor(Math.random() * 500000) + 100000;
+
+  setAiReport({
+    region: `Sector [${lat.toFixed(1)}, ${lng.toFixed(1)}]`,
+    moisture: `${moistureLevel}%`,
+    prediction: `Current temperature of ${temp}°C indicates ${risk} for local crops.`,
+    impact: residents.toLocaleString()
+  });
 };
