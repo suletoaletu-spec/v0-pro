@@ -241,3 +241,12 @@ export function ActionCenter() {
     </div>
   )
 }
+const handleGlobeAction = async (lat: number, lng: number) => {
+  const result = await dispatchGlobalIntelligence(lat, lng);
+  
+  if (result.success) {
+    // UPDATE THE UI TEXT LIVE!
+    updateAIReasoning(lat, lng, result.temp, result.humidity);
+  }
+};
+
