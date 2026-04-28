@@ -231,3 +231,7 @@ const handleManualSupport = async (lat: number, lng: number) => {
   });
 };
 
+<Globe
+  // ... other props
+  onGlobeClick={({ lat, lng }) => handleGlobeAction(lat, lng)}
+/>
