@@ -35,3 +35,17 @@ export const ThreeGlobe = ({ onTriggerSupport }: { onTriggerSupport: (lat: numbe
     />
   );
 }
+
+const handleGlobeAction = async (lat: number, lng: number) => {
+  // 1. Show immediate UI feedback
+  console.log(`AI Sentinel: Deploying aid to ${lat}, ${lng}`);
+  
+  // 2. Trigger the Real-World Email
+  const success = await dispatchFreeSupport(lat, lng);
+
+  if (success) {
+    // If you use a toast library like Sonner
+    // toast.success("REAL AID DISPATCHED");
+    alert(`MISSION SUCCESS: Support dispatched to ${lat.toFixed(2)}, ${lng.toFixed(2)}`);
+  }
+};
