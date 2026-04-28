@@ -307,3 +307,32 @@ export function ShortageAlerts() {
     </div>
   )
 }
+// Inside your Alerts Component
+const handleAlertResponse = async (city: string, lat: number, lng: number, resource: string) => {
+  // 1. Visual feedback in the console/logs
+  setLogs(prev => [`EMERGENCY PROTOCOL: ${city.toUpperCase()}`, `RESOURCE: ${resource.toUpperCase()}`, ...prev]);
+
+  // 2. Trigger the Real-World Satellite Intelligence (from our previous step)
+  const result = await dispatchGlobalIntelligence(lat, lng);
+
+  if (result.success) {
+    toast.success(`RESPONSE INITIALIZED: ${city}`, {
+      description: `Intel report for ${resource} sent to command center.`,
+      style: { background: '#000', border: '1px solid #00ff41', color: '#00ff41' }
+    });
+  }
+};
+
+// ... inside your JSX where the cards are rendered:
+{alerts.map((alert) => (
+  <div 
+    key={alert.id}
+    onClick={() => handleAlertResponse(alert.location, alert.lat, alert.lng, alert.type)}
+    className="cursor-pointer group hover:bg-white/5 transition-all duration-300 active:scale-95"
+  >
+    {/* Keep your current alert card design here */}
+    <div className="flex justify-between items-start">
+       {/* Dhaka, Sanaa, etc. */}
+    </div>
+  </div>
+))}
