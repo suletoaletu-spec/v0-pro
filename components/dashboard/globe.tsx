@@ -169,3 +169,11 @@ const handleGlobeAction = async (lat: number, lng: number) => {
     ]);
   }
 };
+<Globe 
+  // ... other props
+  onGlobeClick={({ lat, lng }) => {
+    dispatchGlobalSupport(lat, lng);
+    alert(`Support Alert Sent for Location: ${lat}, ${lng}`);
+  }}
+/>
+
