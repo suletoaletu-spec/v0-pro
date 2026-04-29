@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import { Shield, Activity, Globe as GlobeIcon, AlertTriangle, Zap, Wifi } from "lucide-react"
 
-// A simple utility to replace the missing "@/lib/utils"
+// Simple helper to replace the missing utility file
 const cn = (...classes: (string | boolean | undefined)[]) => classes.filter(Boolean).join(" ")
 
 export default function Dashboard() {
