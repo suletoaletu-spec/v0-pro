@@ -1,40 +1,14 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
-import { Shield, Radio, Activity, Globe as GlobeIcon } from "lucide-react"
+import { useEffect, useRef } from "react"
 
 export function Globe() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [currentTime, setCurrentTime] = useState(new Date())
-  const [logs, setLogs] = useState<string[]>([
-    "SATELLITE LINK ESTABLISHED",
-    "SCANNING GLOBAL SECTORS...",
-  ])
 
-  // 1. Live Time Update Logic
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date())
-      // Randomly add a "Satellite Log" every few seconds to make it look alive
-      if (Math.random() > 0.8) {
-        const fakeLogs = [
-          "ATMOSPHERIC DATA SYNCED",
-          "RESOURCE BUFFER OPTIMIZED",
-          "SECTOR 7: STABLE",
-          "SIGNAL STRENGTH: 98%",
-          "ORBITAL POSITION: NOMINAL"
-        ]
-        const randomLog = fakeLogs[Math.floor(Math.random() * fakeLogs.length)]
-        setLogs(prev => [randomLog, ...prev].slice(0, 5))
-      }
-    }, 1000)
-    return () => clearInterval(timer)
-  }, [])
-
-  // 2. Existing Canvas Globe Logic (Keep your drawGlobe function here)
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
+
     const ctx = canvas.getContext("2d")
     if (!ctx) return
 
@@ -56,123 +30,208 @@ export function Globe() {
       const centerX = rect.width / 2
       const centerY = rect.height / 2
       const radius = Math.min(centerX, centerY) * 0.7
+
       ctx.clearRect(0, 0, rect.width, rect.height)
 
-      // ... [Keep your globe base, grid lines, and flow lines drawing code here] ...
-      // I'm omitting the middle part to keep this brief, keep your original drawGlobe logic!
+      // Outer glow
+      const glowGradient = ctx.createRadialGradient(
+        centerX,
+        centerY,
+        radius * 0.8,
+        centerX,
+        centerY,
+        radius * 1.4
+      )
+      glowGradient.addColorStop(0, "rgba(0, 220, 220, 0.15)")
+      glowGradient.addColorStop(0.5, "rgba(0, 220, 220, 0.05)")
+      glowGradient.addColorStop(1, "transparent")
+      ctx.fillStyle = glowGradient
+      ctx.fillRect(0, 0, rect.width, rect.height)
+
+      // Globe base
+      const gradient = ctx.createRadialGradient(
+        centerX - radius * 0.3,
+        centerY - radius * 0.3,
+        0,
+        centerX,
+        centerY,
+        radius
+      )
+      gradient.addColorStop(0, "rgba(30, 35, 50, 1)")
+      gradient.addColorStop(0.7, "rgba(15, 18, 28, 1)")
+      gradient.addColorStop(1, "rgba(8, 10, 18, 1)")
+
+      ctx.beginPath()
+      ctx.arc(centerX, centerY, radius, 0, Math.PI * 2)
+      ctx.fillStyle = gradient
+      ctx.fill()
+
+      // Globe border
+      ctx.strokeStyle = "rgba(0, 220, 220, 0.4)"
+      ctx.lineWidth = 2
+      ctx.stroke()
+
+      // Grid lines (latitude)
+      ctx.strokeStyle = "rgba(0, 220, 220, 0.15)"
+      ctx.lineWidth = 1
+      for (let i = 1; i < 6; i++) {
+        const lat = (i / 6) * Math.PI - Math.PI / 2
+        const y = centerY + Math.sin(lat) * radius
+        const w = Math.cos(lat) * radius
+
+        ctx.beginPath()
+        ctx.ellipse(centerX, y, w, w * 0.1, 0, 0, Math.PI * 2)
+        ctx.stroke()
+      }
+
+      // Grid lines (longitude)
+      for (let i = 0; i < 12; i++) {
+        const lon = (i / 12) * Math.PI * 2 + rotation
+        ctx.save()
+        ctx.translate(centerX, centerY)
+        ctx.rotate(lon)
+
+        ctx.beginPath()
+        ctx.ellipse(0, 0, radius * 0.1, radius, 0, 0, Math.PI * 2)
+        ctx.strokeStyle = "rgba(0, 220, 220, 0.1)"
+        ctx.stroke()
+        ctx.restore()
+      }
+
+      // Resource flow lines
+      const flowLines = [
+        { start: -30, end: 45, offset: 0 },
+        { start: 60, end: -20, offset: 0.3 },
+        { start: -60, end: 30, offset: 0.6 },
+        { start: 120, end: -45, offset: 0.15 },
+        { start: -90, end: 80, offset: 0.45 },
+        { start: 150, end: -10, offset: 0.75 },
+      ]
+
+      flowLines.forEach((flow, index) => {
+        const progress = ((Date.now() / 3000 + flow.offset) % 1)
+        const startAngle = (flow.start * Math.PI) / 180 + rotation
+        const endAngle = (flow.end * Math.PI) / 180 + rotation
+
+        const startX = centerX + Math.cos(startAngle) * radius * 0.9
+        const startY = centerY + Math.sin(startAngle) * radius * 0.5
+        const endX = centerX + Math.cos(endAngle) * radius * 0.9
+        const endY = centerY + Math.sin(endAngle) * radius * 0.5
+
+        const cpX = centerX + (Math.random() - 0.5) * radius * 0.5
+        const cpY = centerY - radius * 0.6
+
+        const flowGradient = ctx.createLinearGradient(startX, startY, endX, endY)
+        const isGold = index % 2 === 0
+        const color = isGold ? "rgba(255, 200, 50," : "rgba(0, 220, 220,"
+
+        flowGradient.addColorStop(Math.max(0, progress - 0.2), `${color} 0)`)
+        flowGradient.addColorStop(progress, `${color} 0.8)`)
+        flowGradient.addColorStop(Math.min(1, progress + 0.2), `${color} 0)`)
+
+        ctx.beginPath()
+        ctx.moveTo(startX, startY)
+        ctx.quadraticCurveTo(cpX, cpY, endX, endY)
+        ctx.strokeStyle = flowGradient
+        ctx.lineWidth = 2
+        ctx.stroke()
+
+        // Animated particle
+        const t = progress
+        const particleX = (1 - t) * (1 - t) * startX + 2 * (1 - t) * t * cpX + t * t * endX
+        const particleY = (1 - t) * (1 - t) * startY + 2 * (1 - t) * t * cpY + t * t * endY
+
+        ctx.beginPath()
+        ctx.arc(particleX, particleY, 4, 0, Math.PI * 2)
+        ctx.fillStyle = isGold ? "rgba(255, 200, 50, 1)" : "rgba(0, 220, 220, 1)"
+        ctx.fill()
+
+        // Particle glow
+        const particleGlow = ctx.createRadialGradient(
+          particleX,
+          particleY,
+          0,
+          particleX,
+          particleY,
+          12
+        )
+        particleGlow.addColorStop(0, isGold ? "rgba(255, 200, 50, 0.5)" : "rgba(0, 220, 220, 0.5)")
+        particleGlow.addColorStop(1, "transparent")
+        ctx.fillStyle = particleGlow
+        ctx.fillRect(particleX - 12, particleY - 12, 24, 24)
+      })
+
+      // Center dot
+      ctx.beginPath()
+      ctx.arc(centerX, centerY, 4, 0, Math.PI * 2)
+      ctx.fillStyle = "rgba(0, 220, 220, 1)"
+      ctx.fill()
 
       rotation += 0.002
       animationId = requestAnimationFrame(drawGlobe)
     }
+
     drawGlobe()
+
     return () => {
       window.removeEventListener("resize", resize)
       cancelAnimationFrame(animationId)
     }
   }, [])
 
-  // Helper for world clocks
-  const formatTime = (offset: number) => {
-    return new Intl.DateTimeFormat('en-GB', {
-      hour: '2-digit', minute: '2-digit', second: '2-digit',
-      timeZone: offset === 4 ? 'Asia/Dubai' : offset === 0 ? 'UTC' : offset === 9 ? 'Asia/Tokyo' : 'America/New_York'
-    }).format(currentTime)
-  }
-
   return (
-    <div className="relative w-full h-full flex flex-col items-center justify-center bg-black/20 rounded-3xl border border-white/5 overflow-hidden">
-      
-      {/* TOP LEFT: LIVE STATUS FEED */}
-      <div className="absolute top-4 left-4 z-20 space-y-2">
-        <div className="flex items-center gap-2 text-cyan-400 font-mono text-[10px] tracking-tighter">
-          <Activity className="w-3 h-3 animate-pulse" />
-          SYSTEM LIVE // INTEL_FEED
-        </div>
-        <div className="flex flex-col gap-1">
-          {logs.map((log, i) => (
-            <div key={i} className="text-[9px] font-mono text-white/40 border-l border-white/10 pl-2">
-              {log}
-            </div>
-          ))}
+    <div className="relative w-full h-full flex items-center justify-center">
+      <canvas
+        ref={canvasRef}
+        className="w-full h-full"
+        style={{ maxWidth: "400px", maxHeight: "400px" }}
+      />
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div className="text-center">
+          <div className="text-xs font-mono text-primary/60 tracking-widest">ORBITAL VIEW</div>
         </div>
       </div>
-
-      {/* TOP RIGHT: OVERRIDE HUD (Your existing code) */}
-      <div className="absolute top-4 right-4 z-20 flex flex-col gap-2">
-        <div className="bg-primary/10 border border-primary/40 backdrop-blur-md p-3 rounded-xl animate-pulse">
-          <div className="flex items-center gap-2 text-[10px] font-black text-primary uppercase italic">
-            <Shield className="w-3 h-3" /> Manual Override: Active
-          </div>
-          <p className="text-[9px] text-white/70 font-mono mt-1 uppercase">Satellite Ready</p>
-        </div>
-      </div>
-
-      {/* CENTER: THE GLOBE */}
-      <div className="relative flex items-center justify-center w-full h-[400px]">
-        <canvas ref={canvasRef} className="w-full h-full cursor-crosshair" style={{ maxWidth: "400px", maxHeight: "400px" }} />
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="text-center opacity-20">
-            <div className="text-[8px] font-mono text-primary tracking-[0.5em]">ORBITAL_SYNCHRONIZATION</div>
-          </div>
-        </div>
-      </div>
-
-      {/* BOTTOM: GLOBAL CLOCK STRIP */}
-      <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-8 px-4 border-t border-white/5 pt-4">
-        {[
-          { city: "DUBAI", offset: 4 },
-          { city: "LONDON", offset: 0 },
-          { city: "TOKYO", offset: 9 },
-          { city: "NEW YORK", offset: -5 }
-        ].map((zone) => (
-          <div key={zone.city} className="text-center">
-            <div className="text-[8px] font-mono text-white/30 mb-1">{zone.city}</div>
-            <div className="text-[10px] font-mono text-cyan-400/80">{formatTime(zone.offset)}</div>
-          </div>
-        ))}
-      </div>
-      
     </div>
   )
 }
-// Inside your Globe component...
-const [lastScan, setLastScan] = useState<any>(null);
+{/* OVERLAY HUD */}
+<div className="absolute top-4 right-4 z-20 flex flex-col gap-2">
+  <div className="bg-primary/10 border border-primary/40 backdrop-blur-md p-3 rounded-xl animate-pulse">
+    <div className="flex items-center gap-2 text-[10px] font-black text-primary uppercase italic">
+      <Shield className="w-3 h-3" /> Manual Override: Active
+    </div>
+    <p className="text-[9px] text-white/70 font-mono mt-1">CLICK GLOBE TO RELEASE RESOURCES</p>
+  </div>
 
-const handleGlobeClick = async (lat: number, lng: number) => {
-  // Add a log to your feed
-  setLogs(prev => [`SCANNING COORDS: ${lat.toFixed(2)}, ${lng.toFixed(2)}`, ...prev]);
-  
-  const result = await dispatchPlanetarySupport(lat, lng);
-  
-  if (result.success) {
-    setLastScan({ lat, lng, temp: result.temp });
-    setLogs(prev => [`SUCCESS: DISPATCH SENT (${result.temp}°C)`, ...prev]);
-  }
+  {/* Recent Manual Missions List */}
+  {activeMissions.length > 0 && (
+    <div className="bg-black/80 border border-white/10 p-3 rounded-xl max-h-[150px] overflow-y-auto">
+      <p className="text-[8px] text-muted-foreground uppercase mb-2">Override Logs</p>
+      {activeMissions.map(m => (
+        <div key={m.id} className="text-[9px] font-mono text-green-400 border-l border-green-500 pl-2 mb-2">
+          {m.timestamp}: AID DEPLOYED [{m.lat.toFixed(2)}, {m.lng.toFixed(2)}]
+        </div>
+      ))}
+    </div>
+  )}
+</div>
+const handleManualSupport = async (lat: number, lng: number) => {
+  // 1. Create the UI log
+  const newMission = { id: Date.now(), lat, lng, timestamp: new Date().toLocaleTimeString() };
+  setActiveMissions(prev => [newMission, ...prev]);
+
+  // 2. AUTOMATIC REAL-WORLD DISPATCH
+  // This sends a real alert to your partner email/phone
+  await dispatchFreeSupport({ lat, lng });
+
+  // 3. UI Feedback
+  toast.success("HUMANITARIAN PARTNERS NOTIFIED", {
+    description: `Support protocol active for coord: ${lat.toFixed(2)}, ${lng.toFixed(2)}`,
+    style: { background: '#000', border: '1px solid #00ff41', color: '#00ff41' }
+  });
 };
 
-// ... in your return, make sure the Globe canvas or div has:
-// onClick={() => handleGlobeClick(Math.random()*180-90, Math.random()*360-180)}
-
-
-const handleGlobeAction = async (lat: number, lng: number) => {
-  // Add to your visual log feed
-  setLogs(prev => [`SCANNING: [${lat.toFixed(2)}, ${lng.toFixed(2)}]`, ...prev]);
-
-  // Call the new intelligence function
-  const result = await dispatchGlobalIntelligence(lat, lng);
-
-  if (result.success) {
-    setLogs(prev => [
-      `REPORT: ${result.temp}°C | WIND: ${result.wind}km/h`,
-      `SUCCESS: ALERT SENT TO COMMAND`,
-      ...prev
-    ]);
-  }
-};
-<Globe 
+<Globe
   // ... other props
-  onGlobeClick={({ lat, lng }) => {
-    dispatchGlobalSupport(lat, lng);
-    alert(`Support Alert Sent for Location: ${lat}, ${lng}`);
-  }}
+  onGlobeClick={({ lat, lng }) => handleGlobeAction(lat, lng)}
 />
