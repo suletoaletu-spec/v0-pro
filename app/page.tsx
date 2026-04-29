@@ -6,7 +6,6 @@ import { Header } from "@/components/dashboard/header"
 import { EnhancedMetrics } from "@/components/dashboard/enhanced-metrics"
 import { AgentFeed } from "@/components/dashboard/agent-feed"
 import { ShortageAlerts } from "@/components/dashboard/shortage-alerts"
-import { DecisionAuthorization } from "@/components/dashboard/decision-authorization"
 import { WaterReserveTransferDemo } from "@/components/dashboard/expandable-transfer-card"
 import { Globe2, AlertTriangle, Shield, Zap, Share2, Globe, Wifi } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -61,7 +60,11 @@ export default function Dashboard() {
               <p className="text-[11px] text-green-400 font-mono font-bold tracking-widest animate-pulse">256.4 TB/S LIVE DATA</p>
             </div>
             <button 
-              onClick={() => navigator.share?.({ title: 'PRO Global Engine', url: window.location.href })}
+              onClick={() => {
+                if (navigator.share) {
+                  navigator.share({ title: 'PRO Global Engine', url: window.location.href })
+                }
+              }}
               className="bg-primary text-black px-5 py-2 rounded-xl text-[10px] font-black hover:scale-105 transition-all flex items-center gap-2"
             >
               <Share2 className="w-3 h-3" /> SHARE ACCESS
@@ -129,7 +132,8 @@ export default function Dashboard() {
             )}
           </section>
         </div>
-                <footer className="mt-8 py-6 flex flex-col items-center gap-2 border-t border-white/5">
+
+        <footer className="mt-8 py-6 flex flex-col items-center gap-2 border-t border-white/5">
           <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-[0.5em] opacity-40">System Core Live | Multi-Satellite Sync: Active</p>
         </footer>
       </main>
