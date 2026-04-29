@@ -1,237 +1,139 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import dynamic from "next/dynamic"
+import { useState, useEffect } from "react"
+import { Header } from "@/components/dashboard/header"
+import { EnhancedMetrics } from "@/components/dashboard/enhanced-metrics"
+import { AgentFeed } from "@/components/dashboard/agent-feed"
+import { ShortageAlerts } from "@/components/dashboard/shortage-alerts"
+import { DecisionAuthorization } from "@/components/dashboard/decision-authorization"
+import { WaterReserveTransferDemo } from "@/components/dashboard/expandable-transfer-card"
+import { Globe2, AlertTriangle, Shield, Zap, Share2, Globe, Wifi } from "lucide-react"
+import { cn } from "@/lib/utils"
 
-export function Globe() {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
+const ThreeGlobe = dynamic(
+  () => import("@/components/dashboard/three-globe").then((mod) => mod.ThreeGlobe),
+  {
+    ssr: false,
+    loading: () => <div className="w-full h-full flex items-center justify-center bg-black/20 font-mono text-primary animate-pulse italic">Connecting to Satellite Stream...</div>
+  }
+)
 
+export default function Dashboard() {
+  const [activeTab, setActiveTab] = useState<"globe" | "alerts" | "authorization" | "water">("globe")
+  const [liveTime, setLiveTime] = useState("")
+  const [isLive, setIsLive] = useState(false)
+
+  // Real-time Clock Sync
   useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-
-    const ctx = canvas.getContext("2d")
-    if (!ctx) return
-
-    let animationId: number
-    let rotation = 0
-
-    const resize = () => {
-      const rect = canvas.getBoundingClientRect()
-      canvas.width = rect.width * window.devicePixelRatio
-      canvas.height = rect.height * window.devicePixelRatio
-      ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
-    }
-
-    resize()
-    window.addEventListener("resize", resize)
-
-    const drawGlobe = () => {
-      const rect = canvas.getBoundingClientRect()
-      const centerX = rect.width / 2
-      const centerY = rect.height / 2
-      const radius = Math.min(centerX, centerY) * 0.7
-
-      ctx.clearRect(0, 0, rect.width, rect.height)
-
-      // Outer glow
-      const glowGradient = ctx.createRadialGradient(
-        centerX,
-        centerY,
-        radius * 0.8,
-        centerX,
-        centerY,
-        radius * 1.4
-      )
-      glowGradient.addColorStop(0, "rgba(0, 220, 220, 0.15)")
-      glowGradient.addColorStop(0.5, "rgba(0, 220, 220, 0.05)")
-      glowGradient.addColorStop(1, "transparent")
-      ctx.fillStyle = glowGradient
-      ctx.fillRect(0, 0, rect.width, rect.height)
-
-      // Globe base
-      const gradient = ctx.createRadialGradient(
-        centerX - radius * 0.3,
-        centerY - radius * 0.3,
-        0,
-        centerX,
-        centerY,
-        radius
-      )
-      gradient.addColorStop(0, "rgba(30, 35, 50, 1)")
-      gradient.addColorStop(0.7, "rgba(15, 18, 28, 1)")
-      gradient.addColorStop(1, "rgba(8, 10, 18, 1)")
-
-      ctx.beginPath()
-      ctx.arc(centerX, centerY, radius, 0, Math.PI * 2)
-      ctx.fillStyle = gradient
-      ctx.fill()
-
-      // Globe border
-      ctx.strokeStyle = "rgba(0, 220, 220, 0.4)"
-      ctx.lineWidth = 2
-      ctx.stroke()
-
-      // Grid lines (latitude)
-      ctx.strokeStyle = "rgba(0, 220, 220, 0.15)"
-      ctx.lineWidth = 1
-      for (let i = 1; i < 6; i++) {
-        const lat = (i / 6) * Math.PI - Math.PI / 2
-        const y = centerY + Math.sin(lat) * radius
-        const w = Math.cos(lat) * radius
-
-        ctx.beginPath()
-        ctx.ellipse(centerX, y, w, w * 0.1, 0, 0, Math.PI * 2)
-        ctx.stroke()
-      }
-
-      // Grid lines (longitude)
-      for (let i = 0; i < 12; i++) {
-        const lon = (i / 12) * Math.PI * 2 + rotation
-        ctx.save()
-        ctx.translate(centerX, centerY)
-        ctx.rotate(lon)
-
-        ctx.beginPath()
-        ctx.ellipse(0, 0, radius * 0.1, radius, 0, 0, Math.PI * 2)
-        ctx.strokeStyle = "rgba(0, 220, 220, 0.1)"
-        ctx.stroke()
-        ctx.restore()
-      }
-
-      // Resource flow lines
-      const flowLines = [
-        { start: -30, end: 45, offset: 0 },
-        { start: 60, end: -20, offset: 0.3 },
-        { start: -60, end: 30, offset: 0.6 },
-        { start: 120, end: -45, offset: 0.15 },
-        { start: -90, end: 80, offset: 0.45 },
-        { start: 150, end: -10, offset: 0.75 },
-      ]
-
-      flowLines.forEach((flow, index) => {
-        const progress = ((Date.now() / 3000 + flow.offset) % 1)
-        const startAngle = (flow.start * Math.PI) / 180 + rotation
-        const endAngle = (flow.end * Math.PI) / 180 + rotation
-
-        const startX = centerX + Math.cos(startAngle) * radius * 0.9
-        const startY = centerY + Math.sin(startAngle) * radius * 0.5
-        const endX = centerX + Math.cos(endAngle) * radius * 0.9
-        const endY = centerY + Math.sin(endAngle) * radius * 0.5
-
-        const cpX = centerX + (Math.random() - 0.5) * radius * 0.5
-        const cpY = centerY - radius * 0.6
-
-        const flowGradient = ctx.createLinearGradient(startX, startY, endX, endY)
-        const isGold = index % 2 === 0
-        const color = isGold ? "rgba(255, 200, 50," : "rgba(0, 220, 220,"
-
-        flowGradient.addColorStop(Math.max(0, progress - 0.2), `${color} 0)`)
-        flowGradient.addColorStop(progress, `${color} 0.8)`)
-        flowGradient.addColorStop(Math.min(1, progress + 0.2), `${color} 0)`)
-
-        ctx.beginPath()
-        ctx.moveTo(startX, startY)
-        ctx.quadraticCurveTo(cpX, cpY, endX, endY)
-        ctx.strokeStyle = flowGradient
-        ctx.lineWidth = 2
-        ctx.stroke()
-
-        // Animated particle
-        const t = progress
-        const particleX = (1 - t) * (1 - t) * startX + 2 * (1 - t) * t * cpX + t * t * endX
-        const particleY = (1 - t) * (1 - t) * startY + 2 * (1 - t) * t * cpY + t * t * endY
-
-        ctx.beginPath()
-        ctx.arc(particleX, particleY, 4, 0, Math.PI * 2)
-        ctx.fillStyle = isGold ? "rgba(255, 200, 50, 1)" : "rgba(0, 220, 220, 1)"
-        ctx.fill()
-
-        // Particle glow
-        const particleGlow = ctx.createRadialGradient(
-          particleX,
-          particleY,
-          0,
-          particleX,
-          particleY,
-          12
-        )
-        particleGlow.addColorStop(0, isGold ? "rgba(255, 200, 50, 0.5)" : "rgba(0, 220, 220, 0.5)")
-        particleGlow.addColorStop(1, "transparent")
-        ctx.fillStyle = particleGlow
-        ctx.fillRect(particleX - 12, particleY - 12, 24, 24)
-      })
-
-      // Center dot
-      ctx.beginPath()
-      ctx.arc(centerX, centerY, 4, 0, Math.PI * 2)
-      ctx.fillStyle = "rgba(0, 220, 220, 1)"
-      ctx.fill()
-
-      rotation += 0.002
-      animationId = requestAnimationFrame(drawGlobe)
-    }
-
-    drawGlobe()
-
-    return () => {
-      window.removeEventListener("resize", resize)
-      cancelAnimationFrame(animationId)
-    }
+    setIsLive(true)
+    const timer = setInterval(() => {
+      setLiveTime(new Date().toLocaleTimeString('en-GB', { hour12: false, timeZone: 'UTC' }))
+    }, 1000)
+    return () => clearInterval(timer)
   }, [])
 
   return (
-    <div className="relative w-full h-full flex items-center justify-center">
-      <canvas
-        ref={canvasRef}
-        className="w-full h-full"
-        style={{ maxWidth: "400px", maxHeight: "400px" }}
-      />
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className="text-center">
-          <div className="text-xs font-mono text-primary/60 tracking-widest">ORBITAL VIEW</div>
+    <div className="min-h-screen bg-[#000000] text-foreground font-sans selection:bg-primary/30">
+      <Header />
+      
+      <main className="p-4 md:p-6 max-w-[1600px] mx-auto">
+        {/* LIVE SATELLITE STATUS BAR */}
+        <div className="mb-6 p-4 rounded-2xl border border-primary/20 bg-primary/5 flex flex-col md:flex-row items-center justify-between gap-4 shadow-inner">
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center border border-primary/30">
+                <Wifi className="w-5 h-5 text-primary animate-pulse" />
+              </div>
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-black animate-ping" />
+            </div>
+            <div>
+              <h1 className="text-sm font-black tracking-widest text-white uppercase italic">Satellite Link: Established</h1>
+              <p className="text-[10px] text-primary font-mono font-bold uppercase tracking-tighter">
+                Global Sync Time (UTC): {liveTime || "Syncing..."}
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-6 px-4 border-l border-white/10">
+            <div className="text-right">
+              <p className="text-[9px] text-muted-foreground uppercase font-mono">Real-Time Payload</p>
+              <p className="text-[11px] text-green-400 font-mono font-bold tracking-widest animate-pulse">256.4 TB/S LIVE DATA</p>
+            </div>
+            <button 
+              onClick={() => navigator.share?.({ title: 'PRO Global Engine', url: window.location.href })}
+              className="bg-primary text-black px-5 py-2 rounded-xl text-[10px] font-black hover:scale-105 transition-all flex items-center gap-2"
+            >
+              <Share2 className="w-3 h-3" /> SHARE ACCESS
+            </button>
+          </div>
         </div>
-      </div>
+
+        <section className="mb-6"><EnhancedMetrics /></section>
+
+        {/* Navigation */}
+        <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2 no-scrollbar">
+          {[
+            { id: "globe", label: "Satellite View", icon: Globe2 },
+            { id: "alerts", label: "Live Crisis", icon: AlertTriangle },
+            { id: "water", label: "Global Trade", icon: Zap },
+            { id: "authorization", label: "Admin Console", icon: Shield },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={cn(
+                "flex items-center gap-3 px-6 py-3 rounded-2xl text-[11px] font-mono transition-all border shrink-0 uppercase font-black tracking-widest",
+                activeTab === tab.id ? "bg-primary text-black border-primary shadow-[0_0_25px_rgba(var(--primary),0.3)]" : "bg-[#080808] text-muted-foreground border-white/5 hover:border-primary/40"
+              )}
+            >
+              <tab.icon className="w-4 h-4" />{tab.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Intelligence Feed */}
+          <aside className="lg:col-span-3 order-2 lg:order-1 h-[580px] rounded-3xl border border-white/5 bg-[#050505] p-5 shadow-2xl overflow-hidden relative">
+            <div className="flex items-center justify-between mb-4 border-b border-white/5 pb-2">
+              <span className="text-[9px] font-black text-primary uppercase tracking-[0.2em]">Live Protocol Feed</span>
+              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            </div>
+            <AgentFeed />
+          </aside>
+
+          {/* Globe Display */}
+          <section className="lg:col-span-9 order-1 lg:order-2 h-[580px] rounded-3xl border border-white/10 bg-gradient-to-b from-black to-[#050505] relative overflow-hidden shadow-2xl">
+            {activeTab === "globe" && (
+              <div className="w-full h-full p-2 relative">
+                <div className="absolute bottom-8 left-8 z-10">
+                   <div className="bg-black/60 backdrop-blur-xl p-4 rounded-2xl border border-white/10 flex flex-col gap-1">
+                      <div className="flex items-center gap-2 text-[10px] font-mono text-primary">
+                        <Globe className="w-3 h-3" /> PLANETARY COORDINATES
+                      </div>
+                      <p className="text-[12px] text-white font-mono font-bold tracking-widest">0.0000° N, 0.0000° E</p>
+                      <p className="text-[9px] text-muted-foreground font-mono">Tracking atmospheric density in real-time...</p>
+                   </div>
+                </div>
+                <ThreeGlobe />
+              </div>
+            )}
+            {activeTab === "alerts" && <div className="p-8 h-full overflow-auto"><ShortageAlerts /></div>}
+            {activeTab === "water" && <div className="p-8 h-full overflow-auto"><WaterReserveTransferDemo /></div>}
+            {activeTab === "authorization" && (
+              <div className="p-12 h-full flex flex-col items-center justify-center text-center space-y-4">
+                <Shield className="w-16 h-16 text-primary mb-4 opacity-30" />
+                <h3 className="text-xl font-black italic text-white uppercase tracking-tighter">System Authentication Required</h3>
+                <p className="text-[11px] text-muted-foreground max-w-xs uppercase leading-loose tracking-widest">Authorization requests are logged via Satellite ID. Manual override disabled for public users.</p>
+              </div>
+            )}
+          </section>
+        </div>
+
+        <footer className="mt-8 py-6 flex flex-col items-center gap-2 border-t border-white/5">
+          <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-[0.5em] opacity-40">System Core Live | Multi-Satellite Sync: Active</p>
+        </footer>
+      </main>
     </div>
   )
 }
-{/* OVERLAY HUD */}
-<div className="absolute top-4 right-4 z-20 flex flex-col gap-2">
-  <div className="bg-primary/10 border border-primary/40 backdrop-blur-md p-3 rounded-xl animate-pulse">
-    <div className="flex items-center gap-2 text-[10px] font-black text-primary uppercase italic">
-      <Shield className="w-3 h-3" /> Manual Override: Active
-    </div>
-    <p className="text-[9px] text-white/70 font-mono mt-1">CLICK GLOBE TO RELEASE RESOURCES</p>
-  </div>
-
-  {/* Recent Manual Missions List */}
-  {activeMissions.length > 0 && (
-    <div className="bg-black/80 border border-white/10 p-3 rounded-xl max-h-[150px] overflow-y-auto">
-      <p className="text-[8px] text-muted-foreground uppercase mb-2">Override Logs</p>
-      {activeMissions.map(m => (
-        <div key={m.id} className="text-[9px] font-mono text-green-400 border-l border-green-500 pl-2 mb-2">
-          {m.timestamp}: AID DEPLOYED [{m.lat.toFixed(2)}, {m.lng.toFixed(2)}]
-        </div>
-      ))}
-    </div>
-  )}
-</div>
-const handleManualSupport = async (lat: number, lng: number) => {
-  // 1. Create the UI log
-  const newMission = { id: Date.now(), lat, lng, timestamp: new Date().toLocaleTimeString() };
-  setActiveMissions(prev => [newMission, ...prev]);
-
-  // 2. AUTOMATIC REAL-WORLD DISPATCH
-  // This sends a real alert to your partner email/phone
-  await dispatchFreeSupport({ lat, lng });
-
-  // 3. UI Feedback
-  toast.success("HUMANITARIAN PARTNERS NOTIFIED", {
-    description: `Support protocol active for coord: ${lat.toFixed(2)}, ${lng.toFixed(2)}`,
-    style: { background: '#000', border: '1px solid #00ff41', color: '#00ff41' }
-  });
-};
-
-<Globe
-  // ... other props
-  onGlobeClick={({ lat, lng }) => handleGlobeAction(lat, lng)}
-/>
