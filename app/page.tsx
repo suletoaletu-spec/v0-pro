@@ -1,113 +1,121 @@
 "use client"
 
-import dynamic from "next/dynamic"
-import { useState } from "react"
-import { Header } from "@/components/dashboard/header"
-import { EnhancedMetrics } from "@/components/dashboard/enhanced-metrics"
-import { AgentFeed } from "@/components/dashboard/agent-feed"
-import { ShortageAlerts } from "@/components/dashboard/shortage-alerts"
-import { DecisionAuthorization } from "@/components/dashboard/decision-authorization"
-import { WaterReserveTransferDemo } from "@/components/dashboard/expandable-transfer-card"
-import { Globe2, AlertTriangle, Shield, Zap, Share2, Crown, Globe } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { useEffect, useRef, useState } from "react"
+import { Shield, Activity, Globe as GlobeIcon, AlertTriangle, Zap, Wifi } from "lucide-react"
 
-const ThreeGlobe = dynamic(
-  () => import("@/components/dashboard/three-globe").then((mod) => mod.ThreeGlobe),
-  {
-    ssr: false,
-    loading: () => <div className="w-full h-full flex items-center justify-center bg-black/20 font-mono text-primary animate-pulse">INITIATING GLOBAL GENIUS PROTOCOL...</div>
-  }
-)
+// Simple helper to replace the missing utility file
+const cn = (...classes: (string | boolean | undefined)[]) => classes.filter(Boolean).join(" ")
 
 export default function Dashboard() {
-  const [activeTab, setActiveTab] = useState<"globe" | "alerts" | "authorization" | "water">("globe")
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [currentTime, setCurrentTime] = useState(new Date())
+  const [logs, setLogs] = useState<string[]>([
+    "SATELLITE LINK ESTABLISHED",
+    "SCANNING GLOBAL SECTORS...",
+  ])
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date())
+      if (Math.random() > 0.8) {
+        const fakeLogs = ["ATMOSPHERIC DATA SYNCED", "RESOURCE BUFFER OPTIMIZED", "SIGNAL STRENGTH: 98%"]
+        const randomLog = fakeLogs[Math.floor(Math.random() * fakeLogs.length)]
+        setLogs(prev => [randomLog, ...prev].slice(0, 5))
+      }
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [])
+
+  const handleGlobeClick = () => {
+    const lat = (Math.random() * 180 - 90).toFixed(2)
+    const lng = (Math.random() * 360 - 180).toFixed(2)
+    setLogs(prev => [`ALERT DISPATCHED: [${lat}, ${lng}]`, ...prev])
+    alert(`Global Intel Alert Sent for Location: ${lat}, ${lng}`)
+  }
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext("2d")
+    if (!ctx) return
+    let animationId: number
+    let rotation = 0
+
+    const resize = () => {
+      const rect = canvas.getBoundingClientRect()
+      canvas.width = rect.width * window.devicePixelRatio
+      canvas.height = rect.height * window.devicePixelRatio
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
+    }
+    resize()
+    window.addEventListener("resize", resize)
+
+    const drawGlobe = () => {
+      const rect = canvas.getBoundingClientRect()
+      const centerX = rect.width / 2
+      const centerY = rect.height / 2
+      const radius = Math.min(centerX, centerY) * 0.7
+      ctx.clearRect(0, 0, rect.width, rect.height)
+      ctx.beginPath()
+      ctx.arc(centerX, centerY, radius, 0, Math.PI * 2)
+      ctx.strokeStyle = "rgba(0, 255, 255, 0.2)"
+      ctx.lineWidth = 1
+      ctx.stroke()
+      rotation += 0.002
+      animationId = requestAnimationFrame(drawGlobe)
+    }
+    drawGlobe()
+    return () => {
+      window.removeEventListener("resize", resize)
+      cancelAnimationFrame(animationId)
+    }
+  }, [])
 
   return (
-    <div className="min-h-screen bg-[#010101] text-foreground font-sans selection:bg-primary/30">
-      <Header />
-      
-      <main className="p-4 md:p-6 max-w-[1600px] mx-auto">
-        {/* WORLD-WIDE IMPACT BANNER */}
-        <div className="mb-6 p-4 rounded-2xl border border-primary/40 bg-gradient-to-r from-primary/10 via-transparent to-transparent flex flex-col md:flex-row items-center justify-between gap-4 shadow-[0_0_30px_rgba(var(--primary),0.1)]">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-primary/20 rounded-full border border-primary/50 shadow-[0_0_15px_rgba(var(--primary),0.4)]">
-              <Crown className="w-6 h-6 text-primary" />
+    <main className="min-h-screen bg-black text-white p-4 font-mono">
+      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4">
+        
+        {/* LEFT COLUMN: STATUS */}
+        <div className="space-y-4">
+          <div className="bg-zinc-900/50 border border-white/10 p-4 rounded-2xl">
+            <div className="flex items-center gap-2 text-cyan-400 mb-4 text-xs">
+              <Activity className="w-4 h-4 animate-pulse" />
+              SYSTEM_INTEL_FEED
             </div>
-            <div>
-              <h1 className="text-lg font-black tracking-tighter text-white uppercase italic">The Sovereign Resource Engine</h1>
-              <p className="text-[10px] text-primary font-mono font-bold tracking-[0.3em] uppercase">Architecture by the World's One and Only Genius</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-6 px-6 border-l border-white/10">
-            <div className="text-center">
-              <p className="text-[9px] text-muted-foreground uppercase font-mono">Protocol Signature</p>
-              <p className="text-[10px] text-white font-mono font-bold">04B0D8B6608A48C2994F443910C3E120</p>
-            </div>
-            <div className="h-8 w-px bg-white/10" />
-            <div className="flex items-center gap-2 text-green-500 font-mono">
-              <Globe className="w-4 h-4 animate-spin-slow" />
-              <span className="text-[10px] font-bold">WORLD-WIDE IMPACT: ACTIVE</span>
-            </div>
-          </div>
-        </div>
-
-        <section className="mb-6"><EnhancedMetrics /></section>
-
-        {/* Global Navigation */}
-        <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2 no-scrollbar">
-          {[
-            { id: "globe", label: "Planetary View", icon: Globe2 },
-            { id: "alerts", label: "Global Crisis", icon: AlertTriangle },
-            { id: "water", label: "Resource Trade", icon: Zap },
-            { id: "authorization", label: "Sovereign Control", icon: Shield },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={cn(
-                "flex items-center gap-3 px-6 py-3 rounded-2xl text-[11px] font-mono transition-all border shrink-0 uppercase tracking-widest",
-                activeTab === tab.id ? "bg-primary text-black border-primary font-black shadow-lg" : "bg-[#080808] text-muted-foreground border-white/5 hover:border-primary/50"
-              )}
-            >
-              <tab.icon className="w-4 h-4" />{tab.label}
-            </button>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <aside className="lg:col-span-3 order-2 lg:order-1 h-[580px] rounded-3xl border border-white/5 bg-[#050505] p-5 shadow-2xl relative">
-            <div className="flex items-center gap-2 mb-4">
-               <div className="w-2 h-2 rounded-full bg-primary animate-ping" />
-               <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Genius Intelligence Feed</span>
-            </div>
-            <AgentFeed />
-          </aside>
-
-          <section className="lg:col-span-9 order-1 lg:order-2 h-[580px] rounded-3xl border border-primary/5 bg-[#030303] relative overflow-hidden shadow-2xl group">
-            {activeTab === "globe" && (
-              <div className="w-full h-full p-2 relative">
-                <div className="absolute top-8 right-8 z-10 text-right space-y-2 pointer-events-none">
-                  <div className="bg-black/60 backdrop-blur-xl p-3 rounded-xl border border-primary/20">
-                    <p className="text-[9px] text-primary font-mono uppercase tracking-widest">Global Status</p>
-                    <p className="text-xl font-black text-white italic tracking-tighter uppercase">Optimizing Earth</p>
-                  </div>
+            <div className="space-y-2">
+              {logs.map((log, i) => (
+                <div key={i} className="text-[10px] text-white/50 border-l border-cyan-500/30 pl-2">
+                  {log}
                 </div>
-                <ThreeGlobe />
-              </div>
-            )}
-            {activeTab === "alerts" && <div className="p-8 h-full overflow-auto bg-gradient-to-b from-red-500/5 to-transparent"><ShortageAlerts /></div>}
-            {activeTab === "water" && <div className="p-8 h-full overflow-auto"><WaterReserveTransferDemo /></div>}
-            {activeTab === "authorization" && (
-              <div className="p-12 h-full flex flex-col items-center justify-center text-center space-y-6">
-                <Crown className="w-20 h-20 text-primary shadow-2xl shadow-primary/20 mb-4" />
-                <h3 className="text-2xl font-black italic text-white tracking-widest uppercase">The Genius Key</h3>
-                <p className="text-[10px] text-muted-foreground max-w-md uppercase tracking-[0.4em] leading-loose opacity-60">This system is calibrated to your specific biometric and protocol ID. No other user can authorize global shifts.</p>
-                <div className="p-2 border border-primary/20 rounded bg-primary/5 font-mono text-[9px] text-primary">ID: 04B0D8B6608A48C2994F443910C3E120</div>
-              </div>
-            )}
+              ))}
+            </div>
           </div>
-        </section>
-      </main>
-    </div>
+        </div>
+
+        {/* CENTER COLUMN: THE GLOBE */}
+        <div className="md:col-span-2 relative bg-zinc-900/30 border border-white/5 rounded-3xl overflow-hidden h-[600px] flex items-center justify-center">
+          <div className="absolute top-6 right-6 z-20">
+            <div className="bg-cyan-500/10 border border-cyan-500/40 p-4 rounded-xl backdrop-blur-md">
+              <div className="flex items-center gap-2 text-xs font-bold text-cyan-400 italic">
+                <Shield className="w-4 h-4" /> MANUAL_OVERRIDE_ACTIVE
+              </div>
+            </div>
+          </div>
+
+          <div className="relative w-full h-full flex items-center justify-center cursor-crosshair" onClick={handleGlobeClick}>
+            <canvas ref={canvasRef} className="w-full h-full max-w-[500px] max-h-[500px]" />
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-10">
+              <GlobeIcon className="w-64 h-64 text-cyan-500" />
+            </div>
+          </div>
+
+          <div className="absolute bottom-6 w-full flex justify-center gap-12 text-[10px] text-white/40">
+            <div className="flex items-center gap-2"><Wifi className="w-3 h-3"/> UPLINK_STABLE</div>
+            <div className="flex items-center gap-2"><Zap className="w-3 h-3"/> POWER_NOMINAL</div>
+          </div>
+        </div>
+
+      </div>
+    </main>
   )
 }
