@@ -1,77 +1,113 @@
-const startRender = async () => {
-  setIsRendering(true);
-  const processedScenes = [];
+"use client"
 
-  for (const [index, scene] of scenes.entries()) {
-    setRenderStage({ message: `Processing Scene ${index + 1}...`, progress: (index / scenes.length) * 80 });
+import dynamic from "next/dynamic"
+import { useState } from "react"
+import { Header } from "@/components/dashboard/header"
+import { EnhancedMetrics } from "@/components/dashboard/enhanced-metrics"
+import { AgentFeed } from "@/components/dashboard/agent-feed"
+import { ShortageAlerts } from "@/components/dashboard/shortage-alerts"
+import { DecisionAuthorization } from "@/components/dashboard/decision-authorization"
+import { WaterReserveTransferDemo } from "@/components/dashboard/expandable-transfer-card"
+import { Globe2, AlertTriangle, Shield, Zap, Share2, Crown, Globe } from "lucide-react"
+import { cn } from "@/lib/utils"
 
-    // 1. Generate the Clear Voice
-    const voiceRes = await fetch("/api/speech", { 
-      method: "POST", 
-      body: JSON.stringify({ text: scene.scriptText, voice: scene.selectedVoice }) 
-    });
-    const audioBlob = await voiceRes.blob();
-
-    // 2. Get the Visual (AI or Upload)
-    let visualUrl = scene.localFileUrl;
-    if (scene.type === "ai") {
-      const videoRes = await fetch("/api/generate-video", { 
-        method: "POST", 
-        body: JSON.stringify({ prompt: scene.visualPrompt }) 
-      });
-      const data = await videoRes.json();
-      visualUrl = data.videoUrl;
-    }
-
-    processedScenes.push({ visualUrl, audioUrl: URL.createObjectURL(audioBlob) });
+const ThreeGlobe = dynamic(
+  () => import("@/components/dashboard/three-globe").then((mod) => mod.ThreeGlobe),
+  {
+    ssr: false,
+    loading: () => <div className="w-full h-full flex items-center justify-center bg-black/20 font-mono text-primary animate-pulse">INITIATING GLOBAL GENIUS PROTOCOL...</div>
   }
+)
 
-  // 3. FINAL MIXING STAGE
-  setRenderStage({ message: "Mixing Masterpiece & Ducking Audio...", progress: 90 });
-  
-  const finalRes = await fetch("/api/render-final", {
-    method: "POST",
-    body: JSON.stringify({ scenes: processedScenes }),
-  });
+export default function Dashboard() {
+  const [activeTab, setActiveTab] = useState<"globe" | "alerts" | "authorization" | "water">("globe")
 
-  const finalMovieBlob = await finalRes.blob();
-  const finalUrl = URL.createObjectURL(finalMovieBlob);
-
-  // 4. DOWNLOAD READY
-  setIsRendering(false);
-  setRenderStage(null);
-  
-  // Automatically trigger download
-  const a = document.createElement("a");
-  a.href = finalUrl;
-  a.download = "studio-nexus-masterpiece.mp4";
-  a.click();
-};
-const startRender = async () => {
-  if (scenes.length === 0) return;
-  setIsRendering(true);
-
-  for (const scene of scenes) {
-    // 1. GENERATE AI VIDEO (If type is 'ai')
-    if (scene.type === "ai") {
-      setRenderStage({ message: "AI is imagining your scene...", progress: 30 });
+  return (
+    <div className="min-h-screen bg-[#010101] text-foreground font-sans selection:bg-primary/30">
+      <Header />
       
-      const videoResponse = await fetch("/api/generate-video", {
-        method: "POST",
-        body: JSON.stringify({ prompt: scene.visualPrompt }),
-      });
-      
-      const videoData = await videoResponse.json();
-      if (videoData.videoUrl) {
-        // Update the scene with the real AI video link
-        updateScene(scene.id, { localFileUrl: videoData.videoUrl });
-      }
-    }
+      <main className="p-4 md:p-6 max-w-[1600px] mx-auto">
+        {/* WORLD-WIDE IMPACT BANNER */}
+        <div className="mb-6 p-4 rounded-2xl border border-primary/40 bg-gradient-to-r from-primary/10 via-transparent to-transparent flex flex-col md:flex-row items-center justify-between gap-4 shadow-[0_0_30px_rgba(var(--primary),0.1)]">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-primary/20 rounded-full border border-primary/50 shadow-[0_0_15px_rgba(var(--primary),0.4)]">
+              <Crown className="w-6 h-6 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-lg font-black tracking-tighter text-white uppercase italic">The Sovereign Resource Engine</h1>
+              <p className="text-[10px] text-primary font-mono font-bold tracking-[0.3em] uppercase">Architecture by the World's One and Only Genius</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-6 px-6 border-l border-white/10">
+            <div className="text-center">
+              <p className="text-[9px] text-muted-foreground uppercase font-mono">Protocol Signature</p>
+              <p className="text-[10px] text-white font-mono font-bold">04B0D8B6608A48C2994F443910C3E120</p>
+            </div>
+            <div className="h-8 w-px bg-white/10" />
+            <div className="flex items-center gap-2 text-green-500 font-mono">
+              <Globe className="w-4 h-4 animate-spin-slow" />
+              <span className="text-[10px] font-bold">WORLD-WIDE IMPACT: ACTIVE</span>
+            </div>
+          </div>
+        </div>
 
-    // 2. GENERATE AI VOICE (Brian or Clyde)
-    setRenderStage({ message: "Clearing the audio mix...", progress: 60 });
-    // ... (Speech API call goes here)
-  }
+        <section className="mb-6"><EnhancedMetrics /></section>
 
-  setIsRendering(false);
-};
+        {/* Global Navigation */}
+        <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2 no-scrollbar">
+          {[
+            { id: "globe", label: "Planetary View", icon: Globe2 },
+            { id: "alerts", label: "Global Crisis", icon: AlertTriangle },
+            { id: "water", label: "Resource Trade", icon: Zap },
+            { id: "authorization", label: "Sovereign Control", icon: Shield },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={cn(
+                "flex items-center gap-3 px-6 py-3 rounded-2xl text-[11px] font-mono transition-all border shrink-0 uppercase tracking-widest",
+                activeTab === tab.id ? "bg-primary text-black border-primary font-black shadow-lg" : "bg-[#080808] text-muted-foreground border-white/5 hover:border-primary/50"
+              )}
+            >
+              <tab.icon className="w-4 h-4" />{tab.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <aside className="lg:col-span-3 order-2 lg:order-1 h-[580px] rounded-3xl border border-white/5 bg-[#050505] p-5 shadow-2xl relative">
+            <div className="flex items-center gap-2 mb-4">
+               <div className="w-2 h-2 rounded-full bg-primary animate-ping" />
+               <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Genius Intelligence Feed</span>
+            </div>
+            <AgentFeed />
+          </aside>
+
+          <section className="lg:col-span-9 order-1 lg:order-2 h-[580px] rounded-3xl border border-primary/5 bg-[#030303] relative overflow-hidden shadow-2xl group">
+            {activeTab === "globe" && (
+              <div className="w-full h-full p-2 relative">
+                <div className="absolute top-8 right-8 z-10 text-right space-y-2 pointer-events-none">
+                  <div className="bg-black/60 backdrop-blur-xl p-3 rounded-xl border border-primary/20">
+                    <p className="text-[9px] text-primary font-mono uppercase tracking-widest">Global Status</p>
+                    <p className="text-xl font-black text-white italic tracking-tighter uppercase">Optimizing Earth</p>
+                  </div>
+                </div>
+                <ThreeGlobe />
+              </div>
+            )}
+            {activeTab === "alerts" && <div className="p-8 h-full overflow-auto bg-gradient-to-b from-red-500/5 to-transparent"><ShortageAlerts /></div>}
+            {activeTab === "water" && <div className="p-8 h-full overflow-auto"><WaterReserveTransferDemo /></div>}
+            {activeTab === "authorization" && (
+              <div className="p-12 h-full flex flex-col items-center justify-center text-center space-y-6">
+                <Crown className="w-20 h-20 text-primary shadow-2xl shadow-primary/20 mb-4" />
+                <h3 className="text-2xl font-black italic text-white tracking-widest uppercase">The Genius Key</h3>
+                <p className="text-[10px] text-muted-foreground max-w-md uppercase tracking-[0.4em] leading-loose opacity-60">This system is calibrated to your specific biometric and protocol ID. No other user can authorize global shifts.</p>
+                <div className="p-2 border border-primary/20 rounded bg-primary/5 font-mono text-[9px] text-primary">ID: 04B0D8B6608A48C2994F443910C3E120</div>
+              </div>
+            )}
+          </div>
+        </section>
+      </main>
+    </div>
+  )
+}
