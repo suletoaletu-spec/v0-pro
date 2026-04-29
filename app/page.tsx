@@ -1,104 +1,49 @@
-@import 'tailwindcss';
-@import 'tw-animate-css';
+const startRender = async () => {
+  setIsRendering(true);
+  const processedScenes = [];
 
-@custom-variant dark (&:is(.dark *));
+  for (const [index, scene] of scenes.entries()) {
+    setRenderStage({ message: `Processing Scene ${index + 1}...`, progress: (index / scenes.length) * 80 });
 
-:root {
-  /* Obsidian Dark Theme */
-  --background: oklch(0.12 0.005 260);
-  --foreground: oklch(0.95 0.01 260);
-  --card: oklch(0.15 0.008 260);
-  --card-foreground: oklch(0.95 0.01 260);
-  --popover: oklch(0.13 0.006 260);
-  --popover-foreground: oklch(0.95 0.01 260);
-  /* Neon Cyan Primary */
-  --primary: oklch(0.85 0.18 195);
-  --primary-foreground: oklch(0.12 0.005 260);
-  /* Subtle secondary */
-  --secondary: oklch(0.2 0.01 260);
-  --secondary-foreground: oklch(0.9 0.01 260);
-  --muted: oklch(0.2 0.01 260);
-  --muted-foreground: oklch(0.6 0.02 260);
-  /* Electric Gold Accent */
-  --accent: oklch(0.85 0.17 85);
-  --accent-foreground: oklch(0.12 0.005 260);
-  --destructive: oklch(0.6 0.2 25);
-  --destructive-foreground: oklch(0.95 0.01 260);
-  --border: oklch(0.25 0.015 260);
-  --input: oklch(0.2 0.01 260);
-  --ring: oklch(0.85 0.18 195);
-  /* Custom tokens for neon effects */
-  --neon-cyan: oklch(0.85 0.18 195);
-  --neon-gold: oklch(0.85 0.17 85);
-  --obsidian: oklch(0.12 0.005 260);
-  --obsidian-light: oklch(0.18 0.008 260);
-  --chart-1: oklch(0.85 0.18 195);
-  --chart-2: oklch(0.85 0.17 85);
-  --chart-3: oklch(0.7 0.15 150);
-  --chart-4: oklch(0.75 0.12 280);
-  --chart-5: oklch(0.65 0.18 30);
-  --radius: 0.75rem;
-  --sidebar: oklch(0.1 0.005 260);
-  --sidebar-foreground: oklch(0.95 0.01 260);
-  --sidebar-primary: oklch(0.85 0.18 195);
-  --sidebar-primary-foreground: oklch(0.12 0.005 260);
-  --sidebar-accent: oklch(0.18 0.008 260);
-  --sidebar-accent-foreground: oklch(0.95 0.01 260);
-  --sidebar-border: oklch(0.22 0.01 260);
-  --sidebar-ring: oklch(0.85 0.18 195);
-}
+    // 1. Generate the Clear Voice
+    const voiceRes = await fetch("/api/speech", { 
+      method: "POST", 
+      body: JSON.stringify({ text: scene.scriptText, voice: scene.selectedVoice }) 
+    });
+    const audioBlob = await voiceRes.blob();
 
-@theme inline {
-  --font-sans: 'Geist', 'Geist Fallback';
-  --font-mono: 'Geist Mono', 'Geist Mono Fallback';
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
-  /* Custom Obsidian Theme Colors */
-  --color-neon-cyan: var(--neon-cyan);
-  --color-neon-gold: var(--neon-gold);
-  --color-obsidian: var(--obsidian);
-  --color-obsidian-light: var(--obsidian-light);
-}
+    // 2. Get the Visual (AI or Upload)
+    let visualUrl = scene.localFileUrl;
+    if (scene.type === "ai") {
+      const videoRes = await fetch("/api/generate-video", { 
+        method: "POST", 
+        body: JSON.stringify({ prompt: scene.visualPrompt }) 
+      });
+      const data = await videoRes.json();
+      visualUrl = data.videoUrl;
+    }
 
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
+    processedScenes.push({ visualUrl, audioUrl: URL.createObjectURL(audioBlob) });
   }
-  body {
-    @apply bg-background text-foreground;
-  }
-}
+
+  // 3. FINAL MIXING STAGE
+  setRenderStage({ message: "Mixing Masterpiece & Ducking Audio...", progress: 90 });
+  
+  const finalRes = await fetch("/api/render-final", {
+    method: "POST",
+    body: JSON.stringify({ scenes: processedScenes }),
+  });
+
+  const finalMovieBlob = await finalRes.blob();
+  const finalUrl = URL.createObjectURL(finalMovieBlob);
+
+  // 4. DOWNLOAD READY
+  setIsRendering(false);
+  setRenderStage(null);
+  
+  // Automatically trigger download
+  const a = document.createElement("a");
+  a.href = finalUrl;
+  a.download = "studio-nexus-masterpiece.mp4";
+  a.click();
+};
