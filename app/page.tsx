@@ -129,13 +129,10 @@ export default function Dashboard() {
             )}
           </section>
         </div>
-
-        <footer className="mt-8 py-6 flex flex-col items-center gap-2 border-t border-white/5">
+                <footer className="mt-8 py-6 flex flex-col items-center gap-2 border-t border-white/5">
           <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-[0.5em] opacity-40">System Core Live | Multi-Satellite Sync: Active</p>
         </footer>
       </main>
-    </// Inside your Dashboard function
-const { alerts, isProcessing } = usePlanetaryLogic()
-
-// Create a visual "Mission Status" indicator based on real data
-const missionStatus = alerts.length > 0 ? "INTERVENING" : "MONITORING";
+    </div>
+  )
+}
