@@ -250,7 +250,7 @@ function MenubarSubContent({
       className={cn(
         'bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 min-w-[8rem] origin-(--radix-menubar-content-transform-origin) overflow-hidden rounded-md border p-1 shadow-lg',
         className,
-      )}
+      )} no
       {...props}
     />
   )
@@ -273,4 +273,35 @@ export {
   MenubarSub,
   MenubarSubTrigger,
   MenubarSubContent,
+}
+"use client"
+import { useEffect, useState } from "react"
+
+export function AnimatedNumber({ value, suffix = "", prefix = "" }: { value: number, suffix?: string, prefix?: string }) {
+  const [displayValue, setDisplayValue] = useState(0)
+
+  useEffect(() => {
+    let start = 0
+    const end = value
+    const duration = 2000 // 2 seconds animation
+    const increment = end / (duration / 16)
+
+    const timer = setInterval(() => {
+      start += increment
+      if (start >= end) {
+        setDisplayValue(end)
+        clearInterval(timer)
+      } else {
+        setDisplayValue(start)
+      }
+    }, 16)
+
+    return () => clearInterval(timer)
+  }, [value])
+
+  return (
+    <span>
+      {prefix}{displayValue.toLocaleString(undefined, { maximumFractionDigits: 1 })}{suffix}
+    </span>
+  )
 }
