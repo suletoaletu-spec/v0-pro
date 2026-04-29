@@ -1,7 +1,10 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { Shield, Radio, Activity, Globe as GlobeIcon } from "lucide-react"
+import { Shield, Activity, Globe as GlobeIcon, AlertTriangle, Zap, Wifi } from "lucide-react"
+
+// A simple utility to replace the missing "@/lib/utils"
+const cn = (...classes: (string | boolean | undefined)[]) => classes.filter(Boolean).join(" ")
 
 export default function Dashboard() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -11,7 +14,6 @@ export default function Dashboard() {
     "SCANNING GLOBAL SECTORS...",
   ])
 
-  // 1. Live Time Update Logic
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date())
@@ -24,21 +26,18 @@ export default function Dashboard() {
     return () => clearInterval(timer)
   }, [])
 
-  // 2. Click Handler
   const handleGlobeClick = () => {
     const lat = (Math.random() * 180 - 90).toFixed(2)
     const lng = (Math.random() * 360 - 180).toFixed(2)
-    setLogs(prev => [`SCANNING COORDS: ${lat}, ${lng}`, ...prev])
-    alert(`Support Alert Sent for Location: ${lat}, ${lng}`)
+    setLogs(prev => [`ALERT DISPATCHED: [${lat}, ${lng}]`, ...prev])
+    alert(`Global Intel Alert Sent for Location: ${lat}, ${lng}`)
   }
 
-  // 3. Globe Drawing Logic
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext("2d")
     if (!ctx) return
-
     let animationId: number
     let rotation = 0
 
@@ -48,7 +47,6 @@ export default function Dashboard() {
       canvas.height = rect.height * window.devicePixelRatio
       ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
     }
-
     resize()
     window.addEventListener("resize", resize)
 
@@ -58,12 +56,11 @@ export default function Dashboard() {
       const centerY = rect.height / 2
       const radius = Math.min(centerX, centerY) * 0.7
       ctx.clearRect(0, 0, rect.width, rect.height)
-
       ctx.beginPath()
       ctx.arc(centerX, centerY, radius, 0, Math.PI * 2)
       ctx.strokeStyle = "rgba(0, 255, 255, 0.2)"
+      ctx.lineWidth = 1
       ctx.stroke()
-
       rotation += 0.002
       animationId = requestAnimationFrame(drawGlobe)
     }
@@ -75,34 +72,49 @@ export default function Dashboard() {
   }, [])
 
   return (
-    <main className="min-h-screen bg-black text-white p-8">
-      <div className="max-w-4xl mx-auto space-y-8">
-        <div className="relative w-full h-[500px] flex flex-col items-center justify-center bg-zinc-900/50 rounded-3xl border border-white/10 overflow-hidden">
-          
-          {/* TOP LEFT: STATUS FEED */}
-          <div className="absolute top-4 left-4 z-20 space-y-2">
-            <div className="flex items-center gap-2 text-cyan-400 font-mono text-[10px]">
-              <Activity className="w-3 h-3 animate-pulse" /> SYSTEM LIVE
+    <main className="min-h-screen bg-black text-white p-4 font-mono">
+      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4">
+        
+        {/* LEFT COLUMN: STATUS */}
+        <div className="space-y-4">
+          <div className="bg-zinc-900/50 border border-white/10 p-4 rounded-2xl">
+            <div className="flex items-center gap-2 text-cyan-400 mb-4 text-xs">
+              <Activity className="w-4 h-4 animate-pulse" />
+              SYSTEM_INTEL_FEED
             </div>
-            {logs.map((log, i) => (
-              <div key={i} className="text-[9px] font-mono text-white/40 border-l border-white/10 pl-2">{log}</div>
-            ))}
+            <div className="space-y-2">
+              {logs.map((log, i) => (
+                <div key={i} className="text-[10px] text-white/50 border-l border-cyan-500/30 pl-2">
+                  {log}
+                </div>
+              ))}
+            </div>
           </div>
+        </div>
 
-          {/* TOP RIGHT: HUD */}
-          <div className="absolute top-4 right-4 z-20">
-            <div className="bg-cyan-500/10 border border-cyan-500/40 p-3 rounded-xl">
-              <div className="flex items-center gap-2 text-[10px] font-black text-cyan-400 uppercase">
-                <Shield className="w-3 h-3" /> Manual Override: Active
+        {/* CENTER COLUMN: THE GLOBE */}
+        <div className="md:col-span-2 relative bg-zinc-900/30 border border-white/5 rounded-3xl overflow-hidden h-[600px] flex items-center justify-center">
+          <div className="absolute top-6 right-6 z-20">
+            <div className="bg-cyan-500/10 border border-cyan-500/40 p-4 rounded-xl backdrop-blur-md">
+              <div className="flex items-center gap-2 text-xs font-bold text-cyan-400 italic">
+                <Shield className="w-4 h-4" /> MANUAL_OVERRIDE_ACTIVE
               </div>
             </div>
           </div>
 
-          {/* CENTER: THE GLOBE */}
-          <div className="relative flex items-center justify-center w-full h-full cursor-crosshair" onClick={handleGlobeClick}>
-            <canvas ref={canvasRef} className="w-full h-full" style={{ maxWidth: "400px", maxHeight: "400px" }} />
+          <div className="relative w-full h-full flex items-center justify-center cursor-crosshair" onClick={handleGlobeClick}>
+            <canvas ref={canvasRef} className="w-full h-full max-w-[500px] max-h-[500px]" />
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-10">
+              <GlobeIcon className="w-64 h-64 text-cyan-500" />
+            </div>
+          </div>
+
+          <div className="absolute bottom-6 w-full flex justify-center gap-12 text-[10px] text-white/40">
+            <div className="flex items-center gap-2"><Wifi className="w-3 h-3"/> UPLINK_STABLE</div>
+            <div className="flex items-center gap-2"><Zap className="w-3 h-3"/> POWER_NOMINAL</div>
           </div>
         </div>
+
       </div>
     </main>
   )
